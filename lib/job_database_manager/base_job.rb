@@ -17,7 +17,8 @@ module JobDatabaseManager
 
 
     def fix_empty(s)
-      s.strip.empty? ? nil : s
+      s = s.strip
+      s.empty? ? nil : s
     rescue
       nil
     end
