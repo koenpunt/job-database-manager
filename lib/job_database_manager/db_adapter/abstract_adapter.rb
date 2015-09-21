@@ -6,7 +6,7 @@ module JobDatabaseManager
     class Error < RuntimeError
       attr_reader :out
 
-      def initialize(out)
+      def initialize(out = '')
         @out = out
       end
     end

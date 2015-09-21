@@ -30,20 +30,36 @@ module JobDatabaseManager
         return
       end
 
+      if create_database(build, listener)
+        if create_user(build, listener)
+          set_environment_variables(build)
+        else
+          build.abort
+        end
+      else
+        build.abort
+      end
+    end
+
+
+    def create_database(build, listener)
       begin
         db_connection.create_database("#{job_db_name}_#{build.number}")
+        true
       rescue DbAdapter::Error => e
         listener << error_message(e.out)
-        build.abort
-      else
-        begin
-          db_connection.create_user("#{job_db_name}_#{build.number}", "#{job_db_user}_#{build.number}", job_db_pass)
-        rescue DbAdapter::Error => e
-          listener << error_message(e.out)
-          build.abort
-        else
-          set_environment_variables(build)
-        end
+        false
+      end
+    end
+
+
+    def create_user(build, listener)
+      begin
+        db_connection.create_user("#{job_db_name}_#{build.number}", "#{job_db_user}_#{build.number}", job_db_pass)
+        true
+      rescue DbAdapter::Error => e
+        listener << error_message(e.out)
+        false
       end
     end
 

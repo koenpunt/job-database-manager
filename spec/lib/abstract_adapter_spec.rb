@@ -2,15 +2,7 @@ require 'spec_helper'
 
 describe JobDatabaseManager::DbAdapter::AbstractAdapter do
 
-  class FooAdapter < JobDatabaseManager::DbAdapter::AbstractAdapter
-  end
-
-  def build_klass
-    launcher = double('launcher')
-    FooAdapter.new(launcher, 'foo', 'pass', '127.0.0.1', 3306, '/usr/bin/mysql')
-  end
-
-  let(:klass) { build_klass }
+  let(:klass) { build_adapter }
 
 
   describe '#create_database' do

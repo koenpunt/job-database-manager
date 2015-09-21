@@ -24,3 +24,26 @@ RSpec.configure do |config|
 end
 
 require 'job_database_manager'
+
+
+class FooAdapter < JobDatabaseManager::DbAdapter::AbstractAdapter
+end
+
+
+def build_adapter
+  launcher = double('launcher')
+  FooAdapter.new(launcher, 'foo', 'pass', '127.0.0.1', 3306, '/usr/bin/mysql')
+end
+
+
+def build_db_creator(opts = {})
+  klass = Class.new do
+    include JobDatabaseManager::DbCreator
+  end
+  options = {
+    'job_db_name' => 'foo_db',
+    'job_db_user' => 'foo_user',
+    'job_db_pass' => 'foo_pass'
+  }.merge(opts)
+  klass.new(options)
+end

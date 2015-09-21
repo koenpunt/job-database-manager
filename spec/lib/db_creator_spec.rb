@@ -2,130 +2,147 @@ require 'spec_helper'
 
 describe JobDatabaseManager::DbCreator do
 
-  class FooBuilder
-    include JobDatabaseManager::DbCreator
-  end
-
-  class FooAdapter < JobDatabaseManager::DbAdapter::AbstractAdapter
-  end
+  let(:klass) { build_db_creator }
 
 
-  def build_klass
-    klass = FooBuilder.new({
-      'job_db_name' => 'foo_db',
-      'job_db_user' => 'foo_user',
-      'job_db_pass' => 'foo_pass'
-    })
-    klass
-  end
-
-  let(:klass) { build_klass }
-
-  subject { klass }
-
-  it { should respond_to(:setup) }
-
-
-  describe '#error_message' do
-    it 'should return a formated error message' do
-      expect(klass).to receive(:db_adapter_name).and_return('MySQL')
-      expect(klass.error_message('foo')).to eq "MySQL command failed :\n\nfoo"
+  describe '#job_db_name' do
+    it 'should return the db_name used for the job' do
+      expect(klass.job_db_name).to eq 'foo_db'
     end
   end
 
 
-  describe '#default_job_db_user' do
-    it 'should return the db user for the job' do
-      expect(klass.default_job_db_user).to eq 'foo_db_user'
+
+  describe '#job_db_user' do
+    it 'should return the db_user used for the job' do
+      expect(klass.job_db_user).to eq 'foo_user'
     end
   end
 
 
-  describe '#default_job_db_pass' do
-    it 'should return the db pass for the job' do
-      expect(klass.default_job_db_pass).to eq 'foo_db_jenkins_password'
+
+  describe '#job_db_pass' do
+    it 'should return the db_pass used for the job' do
+      expect(klass.job_db_pass).to eq 'foo_pass'
     end
   end
 
 
-  describe '#fix_empty' do
-    context 'when string is empty' do
-      it 'should return nil' do
-        expect(klass.fix_empty('')).to be nil
-      end
+  describe '#setup' do
+    before do
+      @build      = double('build')
+      @launcher   = double('launcher')
+      @listener   = double('listener')
+      @adapter    = build_adapter
     end
-    context 'when string is nil' do
-      it 'should return nil' do
-        expect(klass.fix_empty(nil)).to be nil
-      end
-    end
-    context 'when string is set' do
-      it 'should return stripped string' do
-        expect(klass.fix_empty(' foo ')).to eq 'foo'
-      end
-    end
-  end
 
-
-  describe '#db_user' do
-    it 'should return the db user used to setup the job db' do
-      expect(klass).to receive(:get_setting_value_for).with(:db_user).and_return('root')
-      expect(klass.db_user).to eq 'root'
-    end
-  end
-
-
-  describe '#db_pass' do
-    it 'should return the db user used to setup the job db' do
-      expect(klass).to receive(:get_setting_value_for).with(:db_password).and_return('root_pass')
-      expect(klass.db_pass).to eq 'root_pass'
-    end
-  end
-
-
-  describe '#db_server_host' do
-    it 'should return the db host used to setup the job db' do
-      expect(klass).to receive(:get_setting_value_for).with(:db_server_host).and_return('localhost')
-      expect(klass.db_server_host).to eq 'localhost'
-    end
-  end
-
-
-  describe '#db_server_port' do
-    it 'should return the db port used to setup the job db' do
-      expect(klass).to receive(:get_setting_value_for).with(:db_server_port).and_return(3306)
-      expect(klass.db_server_port).to eq 3306
-    end
-  end
-
-
-  describe '#db_bin_path' do
-    it 'should return the db bin path used to setup the job db' do
-      expect(klass).to receive(:get_setting_value_for).with(:db_bin_path).and_return('/usr/bin/mysql')
-      expect(klass.db_bin_path).to eq '/usr/bin/mysql'
-    end
-  end
-
-
-  describe '#db_connection' do
-    context 'when adapter exists' do
-      it 'should invoke it with params' do
-        adapter = 'FooAdapter'
-        expect(klass).to receive(:db_adapter_klass).and_return(adapter)
-        expect(klass).to receive(:get_setting_value_for).at_least(:once)
-        expect(adapter).to receive(:constantize).and_return(FooAdapter)
-        klass.db_connection
+    context 'when job db_name is nil' do
+      it 'should abort build' do
+        klass = build_db_creator('job_db_name' => nil)
+        expect(klass).to receive(:db_adapter_name).and_return('MySQL')
+        expect(@listener).to receive(:<<).at_least(:once)
+        expect(@build).to receive(:abort)
+        klass.setup(@build, @launcher, @listener)
       end
     end
 
-    context 'when adapter dont exist' do
-      it 'should raise an error' do
-        adapter = 'BarAdapter'
-        expect(klass).to receive(:db_adapter_klass).and_return(adapter)
-        expect(adapter).to receive(:constantize).and_raise(NameError)
-        expect {
-          klass.db_connection
-        }.to raise_error(NameError)
+    context 'when job_db_name is set' do
+      context 'when the job success' do
+        it 'should return nothing' do
+          expect(klass).to receive(:db_adapter_name).and_return('MySQL')
+          expect(klass).to receive(:db_adapter_type).at_least(:once).and_return('mysql')
+          expect(klass).to receive(:db_connection).at_least(:twice).and_return(@adapter)
+          expect(klass).to receive(:get_setting_value_for).at_least(:twice)
+
+          expect(@listener).to receive(:<<).at_least(:once)
+          expect(@build).to receive(:number).at_least(:once).and_return(1)
+          expect(@build).to receive(:env).at_least(:once).and_return({ 'foo' => 'bar' })
+
+          expect(@adapter).to receive(:create_database)
+          expect(@adapter).to receive(:create_user)
+
+          klass.setup(@build, @launcher, @listener)
+        end
+      end
+
+      context 'when the first step of the job fails' do
+        it 'should abort build' do
+          expect(klass).to receive(:db_adapter_name).and_return('MySQL')
+          expect(klass).to receive(:create_database).at_least(:once).and_return(false)
+          expect(@listener).to receive(:<<).at_least(:once)
+          expect(@build).to receive(:abort)
+          klass.setup(@build, @launcher, @listener)
+        end
+      end
+
+      context 'when the second step of the job fails' do
+        it 'should abort build' do
+          expect(klass).to receive(:db_adapter_name).and_return('MySQL')
+          expect(klass).to receive(:create_database).at_least(:once).and_return(true)
+          expect(klass).to receive(:create_user).at_least(:once).and_return(false)
+          expect(@listener).to receive(:<<).at_least(:once)
+          expect(@build).to receive(:abort)
+          klass.setup(@build, @launcher, @listener)
+        end
+      end
+    end
+  end
+
+
+  describe '#create_database' do
+    before do
+      @build    = double('build')
+      @listener = double('listener')
+      @adapter  = build_adapter
+    end
+
+
+    context 'when task success' do
+      it 'should return true' do
+        expect(klass).to receive(:db_connection).and_return(@adapter)
+        expect(@adapter).to receive(:create_database).and_return(true)
+        expect(@build).to receive(:number).and_return(1)
+        expect(klass.create_database(@build, @listener)).to be true
+      end
+    end
+
+    context 'when task fails' do
+      it 'should return false' do
+        expect(klass).to receive(:db_connection).and_return(@adapter)
+        expect(klass).to receive(:db_adapter_name).and_return('MySQL')
+        expect(@build).to receive(:number).at_least(:once).and_return(1)
+        expect(@adapter).to receive(:create_database).and_raise(JobDatabaseManager::DbAdapter::Error)
+        expect(@listener).to receive(:<<).at_least(:once)
+        expect(klass.create_database(@build, @listener)).to be false
+      end
+    end
+  end
+
+
+  describe '#create_user' do
+    before do
+      @build    = double('build')
+      @listener = double('listener')
+      @adapter  = build_adapter
+    end
+
+    context 'when task success' do
+      it 'should return true' do
+        expect(klass).to receive(:db_connection).and_return(@adapter)
+        expect(@build).to receive(:number).at_least(:once).and_return(1)
+        expect(@adapter).to receive(:create_user).and_return(true)
+        expect(klass.create_user(@build, @listener)).to be true
+      end
+    end
+
+    context 'when task fails' do
+      it 'should return false' do
+        expect(klass).to receive(:db_connection).and_return(@adapter)
+        expect(klass).to receive(:db_adapter_name).and_return('MySQL')
+        expect(@build).to receive(:number).at_least(:once).and_return(1)
+        expect(@adapter).to receive(:create_user).and_raise(JobDatabaseManager::DbAdapter::Error)
+        expect(@listener).to receive(:<<).at_least(:once)
+        expect(klass.create_user(@build, @listener)).to be false
       end
     end
   end
