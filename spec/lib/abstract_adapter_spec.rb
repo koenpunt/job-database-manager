@@ -17,7 +17,8 @@ describe JobDatabaseManager::DbAdapter::AbstractAdapter do
   describe '#create_user' do
     it 'should create the user passed in param' do
       expect(klass).to receive(:create_user_query).with('bar', 'foo', 'pass').and_return('foo')
-      expect(klass).to receive(:execute).with('foo')
+      expect(klass).to receive(:create_privileges_query).with('bar', 'foo', 'pass').and_return('foo')
+      expect(klass).to receive(:execute).with('foo').at_least(:twice)
       klass.create_user('bar', 'foo', 'pass')
     end
   end
@@ -34,7 +35,7 @@ describe JobDatabaseManager::DbAdapter::AbstractAdapter do
 
   describe '#drop_user' do
     it 'should drop the user passed in param' do
-      expect(klass).to receive(:drop_privilege_query).with('foo').and_return('foo')
+      expect(klass).to receive(:drop_privileges_query).with('foo').and_return('foo')
       expect(klass).to receive(:drop_user_query).with('foo').and_return('foo')
       expect(klass).to receive(:execute).with('foo')
       expect(klass).to receive(:execute).with('foo')
@@ -60,6 +61,15 @@ describe JobDatabaseManager::DbAdapter::AbstractAdapter do
   end
 
 
+  describe '#create_privileges_query' do
+    it 'should raise an error' do
+      expect {
+        klass.create_privileges_query('database', 'user', 'password')
+      }.to raise_error(NotImplementedError)
+    end
+  end
+
+
   describe '#drop_database_query' do
     it 'should raise an error' do
       expect {
@@ -69,10 +79,10 @@ describe JobDatabaseManager::DbAdapter::AbstractAdapter do
   end
 
 
-  describe '#drop_privilege_query' do
+  describe '#drop_privileges_query' do
     it 'should raise an error' do
       expect {
-        klass.drop_privilege_query('user')
+        klass.drop_privileges_query('user')
       }.to raise_error(NotImplementedError)
     end
   end

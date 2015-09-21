@@ -38,6 +38,7 @@ module JobDatabaseManager
 
       def create_user(database, user, password)
         execute create_user_query(database, user, password)
+        execute create_privileges_query(database, user, password)
       end
 
 
@@ -47,7 +48,7 @@ module JobDatabaseManager
 
 
       def drop_user(user)
-        execute drop_privilege_query(user)
+        execute drop_privileges_query(user)
         execute drop_user_query(user)
       end
 
@@ -62,12 +63,17 @@ module JobDatabaseManager
       end
 
 
+      def create_privileges_query(database, user, password)
+        raise NotImplementedError
+      end
+
+
       def drop_database_query(database)
         raise NotImplementedError
       end
 
 
-      def drop_privilege_query(user)
+      def drop_privileges_query(user)
         raise NotImplementedError
       end
 
