@@ -2,11 +2,13 @@ require 'rubygems'
 require 'simplecov'
 require 'rspec'
 require 'codeclimate-test-reporter'
+require 'pullreview/coverage_reporter'
 
 ## Configure SimpleCov
 SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
   SimpleCov::Formatter::HTMLFormatter,
-  CodeClimate::TestReporter::Formatter
+  CodeClimate::TestReporter::Formatter,
+  PullReview::Coverage::Formatter
 ]
 
 ## Start Simplecov
