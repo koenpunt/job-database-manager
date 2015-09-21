@@ -47,3 +47,16 @@ def build_db_creator(opts = {})
   }.merge(opts)
   klass.new(options)
 end
+
+
+def build_db_destroyer(opts = {})
+  klass = Class.new do
+    include JobDatabaseManager::DbDestroyer
+  end
+  options = {
+    'job_db_name' => 'foo_db',
+    'job_db_user' => 'foo_user',
+    'job_db_pass' => 'foo_pass'
+  }.merge(opts)
+  klass.new(options)
+end

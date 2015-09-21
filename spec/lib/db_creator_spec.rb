@@ -12,13 +12,11 @@ describe JobDatabaseManager::DbCreator do
   end
 
 
-
   describe '#job_db_user' do
     it 'should return the db_user used for the job' do
       expect(klass.job_db_user).to eq 'foo_user'
     end
   end
-
 
 
   describe '#job_db_pass' do
