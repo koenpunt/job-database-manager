@@ -47,7 +47,7 @@ describe JobDatabaseManager::DbCreator do
     context 'when job_db_name is set' do
       context 'when the job success' do
         it 'should return nothing' do
-          expect(klass).to receive(:db_adapter_name).and_return('MySQL')
+          expect(klass).to receive(:db_adapter_name).at_least(:once).and_return('MySQL')
           expect(klass).to receive(:db_adapter_type).at_least(:once).and_return('mysql')
           expect(klass).to receive(:db_connection).at_least(:twice).and_return(@adapter)
           expect(klass).to receive(:get_setting_value_for).at_least(:twice)
@@ -97,20 +97,24 @@ describe JobDatabaseManager::DbCreator do
 
     context 'when task success' do
       it 'should return true' do
+        expect(klass).to receive(:db_adapter_name).at_least(:once).and_return('MySQL')
         expect(klass).to receive(:db_connection).and_return(@adapter)
-        expect(@adapter).to receive(:create_database).and_return(true)
         expect(@build).to receive(:number).and_return(1)
+        expect(@listener).to receive(:<<).at_least(:once)
+
+        expect(@adapter).to receive(:create_database).and_return(true)
         expect(klass.create_database(@build, @listener)).to be true
       end
     end
 
     context 'when task fails' do
       it 'should return false' do
+        expect(klass).to receive(:db_adapter_name).at_least(:once).and_return('MySQL')
         expect(klass).to receive(:db_connection).and_return(@adapter)
-        expect(klass).to receive(:db_adapter_name).and_return('MySQL')
         expect(@build).to receive(:number).at_least(:once).and_return(1)
-        expect(@adapter).to receive(:create_database).and_raise(JobDatabaseManager::DbAdapter::Error)
         expect(@listener).to receive(:<<).at_least(:once)
+
+        expect(@adapter).to receive(:create_database).and_raise(JobDatabaseManager::DbAdapter::Error)
         expect(klass.create_database(@build, @listener)).to be false
       end
     end
@@ -126,8 +130,11 @@ describe JobDatabaseManager::DbCreator do
 
     context 'when task success' do
       it 'should return true' do
+        expect(klass).to receive(:db_adapter_name).at_least(:once).and_return('MySQL')
         expect(klass).to receive(:db_connection).and_return(@adapter)
         expect(@build).to receive(:number).at_least(:once).and_return(1)
+        expect(@listener).to receive(:<<).at_least(:once)
+
         expect(@adapter).to receive(:create_user).and_return(true)
         expect(klass.create_user(@build, @listener)).to be true
       end
@@ -135,11 +142,12 @@ describe JobDatabaseManager::DbCreator do
 
     context 'when task fails' do
       it 'should return false' do
+        expect(klass).to receive(:db_adapter_name).at_least(:once).and_return('MySQL')
         expect(klass).to receive(:db_connection).and_return(@adapter)
-        expect(klass).to receive(:db_adapter_name).and_return('MySQL')
         expect(@build).to receive(:number).at_least(:once).and_return(1)
-        expect(@adapter).to receive(:create_user).and_raise(JobDatabaseManager::DbAdapter::Error)
         expect(@listener).to receive(:<<).at_least(:once)
+
+        expect(@adapter).to receive(:create_user).and_raise(JobDatabaseManager::DbAdapter::Error)
         expect(klass.create_user(@build, @listener)).to be false
       end
     end
