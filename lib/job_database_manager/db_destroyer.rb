@@ -33,25 +33,17 @@ module JobDatabaseManager
 
 
     def drop_database(build, listener)
-      begin
+      catch_errors(listener) do
         listener << "Drop #{db_adapter_name} database for job if exists"
         db_connection.drop_database("#{job_db_name}_#{build.number}")
-        true
-      rescue DbAdapter::Error => e
-        listener << error_message(e.out)
-        false
       end
     end
 
 
     def drop_user(build, listener)
-      begin
+      catch_errors(listener) do
         listener << "Drop #{db_adapter_name} user for job if exists"
         db_connection.drop_user("#{job_db_user}_#{build.number}")
-        true
-      rescue DbAdapter::Error => e
-        listener << error_message(e.out)
-        false
       end
     end
 

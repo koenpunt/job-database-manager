@@ -59,5 +59,19 @@ module JobDatabaseManager
       end
     end
 
+
+    private
+
+
+      def catch_errors(listener, &block)
+        begin
+          yield
+          true
+        rescue DbAdapter::Error => e
+          listener << error_message(e.out)
+          false
+        end
+      end
+
   end
 end

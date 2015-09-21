@@ -43,25 +43,17 @@ module JobDatabaseManager
 
 
     def create_database(build, listener)
-      begin
+      catch_errors(listener) do
         listener << "Creating #{db_adapter_name} database for job"
         db_connection.create_database("#{job_db_name}_#{build.number}")
-        true
-      rescue DbAdapter::Error => e
-        listener << error_message(e.out)
-        false
       end
     end
 
 
     def create_user(build, listener)
-      begin
+      catch_errors(listener) do
         listener << "Creating #{db_adapter_name} user for job"
         db_connection.create_user("#{job_db_name}_#{build.number}", "#{job_db_user}_#{build.number}", job_db_pass)
-        true
-      rescue DbAdapter::Error => e
-        listener << error_message(e.out)
-        false
       end
     end
 
