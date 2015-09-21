@@ -4,9 +4,7 @@
 [![GitHub release](https://img.shields.io/github/release/jbox-web/job-database-manager.svg)](https://github.com/jbox-web/job-database-manager/releases/latest)
 [![Build Status](https://travis-ci.org/jbox-web/job-database-manager.svg?branch=master)](https://travis-ci.org/jbox-web/job-database-manager)
 [![Code Climate](https://codeclimate.com/github/jbox-web/job-database-manager/badges/gpa.svg)](https://codeclimate.com/github/jbox-web/job-database-manager)
-[![Test Coverage](https://codeclimate.com/github/jbox-web/job-database-manager/badges/coverage.svg)](https://codeclimate.com/github/jbox-web/job-database-manager/coverage)
 [![Dependency Status](https://gemnasium.com/jbox-web/job-database-manager.svg)](https://gemnasium.com/jbox-web/job-database-manager)
-[![PullReview stats](https://www.pullreview.com/github/jbox-web/job-database-manager/badges/master.svg?)](https://www.pullreview.com/github/jbox-web/job-database-manager/reviews/master)
 
 ### A Ruby gem to develop Jenkins Database plugins in Ruby, easy ;)
 
