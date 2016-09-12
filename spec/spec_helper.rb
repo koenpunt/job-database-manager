@@ -5,11 +5,11 @@ require 'codeclimate-test-reporter'
 require 'pullreview/coverage_reporter'
 
 ## Configure SimpleCov
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
   SimpleCov::Formatter::HTMLFormatter,
   CodeClimate::TestReporter::Formatter,
   PullReview::Coverage::Formatter
-]
+])
 
 ## Start Simplecov
 SimpleCov.start do
