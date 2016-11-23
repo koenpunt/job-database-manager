@@ -24,6 +24,14 @@ module JobDatabaseManager
     end
 
 
+    def get_bool(string)
+      string.strip!
+      !string.empty?
+    rescue
+      false
+    end
+
+
     def db_user
       get_setting_value_for(:db_user)
     end

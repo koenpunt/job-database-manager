@@ -16,7 +16,7 @@ module JobDatabaseManager
       @job_db_name = fix_empty(attrs['job_db_name'])
       @job_db_user = fix_empty(attrs['job_db_user']) || default_job_db_user
       @job_db_pass = fix_empty(attrs['job_db_pass']) || default_job_db_pass
-      @job_create_user = fix_empty(attrs['job_create_user']) || true
+      @job_create_user = get_bool(attrs['job_create_user'])
     end
 
 
