@@ -7,7 +7,7 @@ module JobDatabaseManager
 
 
     def default_job_db_user
-      "#{job_db_name}_user"
+      "#{job_db_name[0...11]}_user"
     end
 
 
