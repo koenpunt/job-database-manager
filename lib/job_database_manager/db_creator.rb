@@ -9,12 +9,14 @@ module JobDatabaseManager
     attr_reader :job_db_name
     attr_reader :job_db_user
     attr_reader :job_db_pass
+    attr_reader :job_create_user
 
 
     def initialize(attrs)
       @job_db_name = fix_empty(attrs['job_db_name'])
       @job_db_user = fix_empty(attrs['job_db_user']) || default_job_db_user
       @job_db_pass = fix_empty(attrs['job_db_pass']) || default_job_db_pass
+      @job_create_user = fix_empty(attrs['job_create_user']) || true
     end
 
 
@@ -30,15 +32,23 @@ module JobDatabaseManager
         return
       end
 
-      if create_database(build, listener)
-        if create_user(build, listener)
-          set_environment_variables(build)
-        else
-          build.abort
-        end
-      else
+      unless create_database(build, listener)
         build.abort
+        return
       end
+
+      if create_user?
+        unless create_user(build, listener)
+          build.abort
+          return
+        end
+      end
+      set_environment_variables(build)
+    end
+
+
+    def create_user?
+      job_create_user
     end
 
 
@@ -60,11 +70,10 @@ module JobDatabaseManager
 
     private
 
-
       def set_environment_variables(build)
         build.env["#{db_adapter_type.to_s.upcase}_DATABASE"] = "#{job_db_name}_#{build.number}"
-        build.env["#{db_adapter_type.to_s.upcase}_USER"]     = "#{job_db_user}_#{build.number}"
-        build.env["#{db_adapter_type.to_s.upcase}_PASSWORD"] = job_db_pass
+        build.env["#{db_adapter_type.to_s.upcase}_USER"]     = create_user? ? "#{job_db_user}_#{build.number}" : db_user
+        build.env["#{db_adapter_type.to_s.upcase}_PASSWORD"] = create_user? ? job_db_pass : db_pass
         build.env["#{db_adapter_type.to_s.upcase}_HOST"]     = db_server_host
         build.env["#{db_adapter_type.to_s.upcase}_PORT"]     = db_server_port
       end
