@@ -12,7 +12,7 @@ module JobDatabaseManager
 
 
     def default_job_db_pass
-      "#{job_db_name}_jenkins_password"
+      "#{job_db_name}_password"
     end
 
 
